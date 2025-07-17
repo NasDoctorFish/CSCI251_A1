@@ -16,8 +16,8 @@ int main ()
     string inputFilename;
     cin >> inputFilename;
 
-    fstream inputFile (inputFilename.c_str(), fstream::in);
-
+    fstream inputFile (inputFilename.c_str(), fstream::in); //old days fstream cannot take string itself. instead they used const char* type, so .c_str() converts into const char*.
+  
     string aLine;
 
     cout << endl;
