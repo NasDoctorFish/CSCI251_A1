@@ -1,0 +1,14 @@
+[1, 1]-3-Mega_City
+[1, 2]-3-Mega_City
+[1, 4]-3-Mega_City
+[2, 1]-3-Mega_City
+[2, 3]-3-Mega_City
+[2, 5]-3-Mega_City
+[3, 6]-2-MidTown
+[3, 7]-2-MidTown
+[4, 1]-3-Mega_City
+[4, 2]-3-Mega_City
+[4, 4]-3-Mega_City
+[5, 6]-2-MidTown
+[5, 7]-2-MidTown
+[6, 6]-1-Village
