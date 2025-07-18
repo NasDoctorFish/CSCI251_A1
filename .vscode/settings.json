@@ -4,7 +4,8 @@
         "vector": "cpp",
         "ostream": "cpp",
         "iomanip": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "string": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

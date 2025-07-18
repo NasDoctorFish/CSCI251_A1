@@ -34,7 +34,7 @@ inline std::tuple<int, int> coord_to_int(const std::string& coord_input)
 
 
 
-void displayCoordinate(const int& max_x, const int& max_y, const vector<Info>& infos);
+void displayCoordinate(const int& start_x, const int& end_x, const int& start_y, const int& end_y, const vector<Info>& infos);
 
 
 
@@ -44,6 +44,8 @@ vector<Info> readCityLocation(ifstream& inFile);
 
 std::array<int,2> process_X_Y_str(const string& line);
 
+
+string *ConfigFileReader(const string &inputFilename);
 
 
 #endif
