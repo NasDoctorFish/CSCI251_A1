@@ -4,7 +4,7 @@ GridX_IdxRange=10-20
 
 // The range of 'vertical' indices, inclusive
 // E.g. if the range is 0-3, then the indices are 0, 1, 2, 3
-GridY_IdxRange=0-10
+GridY_IdxRange=20-35
 
 // [x,y] grid-areas which are occupied by cities
 citylocation_two.txt

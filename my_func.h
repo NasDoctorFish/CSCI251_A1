@@ -22,30 +22,26 @@ struct Info {
     std::string name;
 };
 
-inline std::tuple<int, int> coord_to_int(const std::string& coord_input)
-{
-    std::string temp = coord_input;
-    temp.erase(remove(temp.begin(), temp.end(), ' '), temp.end());
-
-    int x, y;
-    sscanf(temp.c_str(), "[%d,%d]", &x, &y);
-    return {x, y};
-}
+std::tuple<int, int> coord_to_int(const std::string& coord_input);
 
 
 
-void displayCoordinate(const int& start_x, const int& end_x, const int& start_y, const int& end_y, const vector<Info>& infos);
+void displayCoordinate(const int &start_x, const int &end_x, const int &start_y, const int &end_y, const vector<Info> &infos, const bool &isLMH = false);
 
 
 
 vector<Info> readCityLocation(ifstream& inFile);
 
+vector<Info> readElse(ifstream &inFile, const string& content_type);
 
 
 std::array<int,2> process_X_Y_str(const string& line);
 
 
 string *ConfigFileReader(const string &inputFilename);
+
+
+void displayMainMenu();
 
 
 #endif
