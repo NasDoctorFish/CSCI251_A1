@@ -104,7 +104,7 @@ void displayCoordinate(const int &start_x, const int &end_x, const int &start_y,
             // Inner grid cells with data
             else if (x >= offset && y >= offset && x - offset <= x_gap && y - offset <= y_gap)
             {
-                string num_str = grid[y - offset][x - offset];
+                string num_str = grid[start_y + y - offset][start_x + x - offset];
                 int temp_num = 0;
                 try
                 {
