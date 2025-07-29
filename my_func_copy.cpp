@@ -1,4 +1,4 @@
-#include "my_func.h"
+#include "my_func_copy.h"
 #include <iostream>
 #include <numeric> // for std::accumulate
 #include <sstream> // stringstream
@@ -15,23 +15,34 @@ std::tuple<int, int> coord_to_int(const std::string &coord_input)
     return {x, y};
 }
 
-
 // can use for citylocation, cloudcover, "cloudcover_LMH", "pressure_LMH"
 // display locations
-void displayCoordinate(const int &start_x, const int &end_x, const int &start_y, const int &end_y, const vector<Info> &infos, const bool &isLMH)
+void displayCoordinate(int &start_x, int &end_x, int &start_y, int &end_y, Info *&infos, int &count, bool isLMH)
 {
-    // int end_x = 12;
-    // int end_y = 12;
-    vector<vector<string>> grid(end_y + 1, vector<string>(end_x + 1, " "));
-
-    // Put the number character into grid
-    for (const Info &info : infos)
+    int width = end_x + 1;
+    int height = end_y + 1;
+    string **grid = new string *[height];
+    for (int i = 0; i < height; ++i)
     {
-        grid[info.coord_y_int][info.coord_x_int] = info.number;
+        grid[i] = new string[width];
+        for (int j = 0; j < width; ++j)
+        {
+            grid[i][j] = " ";
+        }
     }
 
-    int chars_in_block = 5; // space width per block
-    const int offset = 2;   // extra offset for border
+    for (int i = 0; i < count; ++i)
+    {
+        int y = infos[i].coord_y_int;
+        int x = infos[i].coord_x_int;
+        if (y < height && x < width)
+        {
+            grid[y][x] = infos[i].number;
+        }
+    }
+
+    int chars_in_block = 5;
+    const int offset = 2;
     int x_gap = end_x - start_x;
     int y_gap = end_y - start_y;
     int border_left = offset - 1;
@@ -39,91 +50,54 @@ void displayCoordinate(const int &start_x, const int &end_x, const int &start_y,
     int border_bottom = offset - 1;
     int border_top = y_gap + offset + 1;
 
-    // Loop from top (y_gap + offset + 1) to bottom (0)
     for (int y = y_gap + offset + 1; y >= 0; --y)
     {
-        // Loop from left (0) to right (x_gap + offset + 1)
         for (int x = 0; x <= x_gap + offset + 1; ++x)
         {
-
-            // Bottom-left corner cell (empty)
             if (x == 0 && y == 0)
-            {
                 cout << setw(chars_in_block) << " ";
-            }
-            // Y-axis index labels on the left
             else if (x == 0 && y >= offset && y - offset <= y_gap)
-            {
                 cout << setw(chars_in_block) << (start_y + y - offset);
-            }
-            // X-axis index labels at the bottom
             else if (y == 0 && x >= offset && x - offset <= x_gap)
-            {
                 cout << setw(chars_in_block) << (start_x + x - offset);
-            }
-            // Border lines
             else if (x == border_left || x == border_right || y == border_bottom || y == border_top)
-            {
                 cout << setw(chars_in_block) << "#";
-            }
-            // Inner grid cells with data
             else if (x >= offset && y >= offset && x - offset <= x_gap && y - offset <= y_gap)
             {
                 string num_str = grid[start_y + y - offset][start_x + x - offset];
                 int temp_num = 0;
                 try
                 {
-                    if (!num_str.empty()) // if num_str is not empty, convert is into integer
+                    if (!num_str.empty())
                         temp_num = stoi(num_str);
                 }
-                catch (const invalid_argument &e)
+                catch (...)
                 {
-                    // 잘못된 값은 그냥 0으로 둠
                     temp_num = 0;
                 }
 
-                // when infos are CloudCover data
-                if (infos[0].name == "cloudcover")
-                // the value of name in every CloudCover data is "CloudCover"
+                string name = infos[0].name;
+                if (name == "cloudcover" || name == "pressure")
                 {
-                    if (isLMH) {
-                        if (temp_num >= 0 && temp_num < 35) {
+                    if (isLMH)
+                    {
+                        if (temp_num < 35)
                             cout << setw(chars_in_block) << "L";
-                        } //현재 traverse 된 temp_num의 값을 확인 if/else 문 통과
-                        else if (temp_num >= 35 && temp_num < 65) {
+                        else if (temp_num < 65)
                             cout << setw(chars_in_block) << "M";
-                        } //현재 traverse 된 infos의 값을 확인 if/else 문 통과
-                        else if (temp_num >= 65 && temp_num < 100) {
+                        else
                             cout << setw(chars_in_block) << "H";
-                        } //현재 traverse 된 infos의 값을 확인 if/else 문 통과
                     }
-                    else {
-                        cout << setw(chars_in_block) << temp_num / 10; // cloud cover index e.g. 41 => 4
-                    }
-                }
-                else if (infos[0].name == "pressure") // when the content_type is pressure
-                {
-                    if (isLMH) {
-                        if (temp_num >= 0 && temp_num < 35) {
-                            cout << setw(chars_in_block) << "L";
-                        } //현재 traverse 된 temp_num의 값을 확인 if/else 문 통과
-                        else if (temp_num >= 35 && temp_num < 65) {
-                            cout << setw(chars_in_block) << "M";
-                        } //현재 traverse 된 infos의 값을 확인 if/else 문 통과
-                        else if (temp_num >= 65 && temp_num < 100) {
-                            cout << setw(chars_in_block) << "H";
-                        } //현재 traverse 된 infos의 값을 확인 if/else 문 통과
-                    }
-                    else {
-                        cout << setw(chars_in_block) << temp_num / 10; // cloud cover index e.g. 41 => 4
+                    else
+                    {
+                        cout << setw(chars_in_block) << temp_num / 10;
                     }
                 }
                 else
-                { // when infos are citylocation data
+                {
                     cout << setw(chars_in_block) << temp_num;
                 }
             }
-            // Other blank spaces
             else
             {
                 cout << setw(chars_in_block) << " ";
@@ -131,6 +105,10 @@ void displayCoordinate(const int &start_x, const int &end_x, const int &start_y,
         }
         cout << endl;
     }
+
+    for (int i = 0; i < height; ++i)
+        delete[] grid[i];
+    delete[] grid;
 }
 
 // }
@@ -139,10 +117,11 @@ void displayCoordinate(const int &start_x, const int &end_x, const int &start_y,
     : Used when you get citylocation.txt input as ifstream object
     and read the coordinates saved inside.
 */
-vector<Info> readCityLocation(ifstream &inFile)
+Info *readCityLocation(ifstream &inFile, int &count)
 {
     string line, coordinate, city, cityId;
-    vector<Info> infos;
+    int capacity = 100;
+    Info *infos = new Info[capacity];
 
     while (getline(inFile, line))
     {
@@ -160,19 +139,19 @@ vector<Info> readCityLocation(ifstream &inFile)
         temp.coord_x_int = get<0>(coord_temp);
         temp.coord_y_int = get<1>(coord_temp);
 
-        infos.push_back(temp);
+        if (count < capacity)
+            infos[count++] = temp;
     }
 
     return infos;
 }
 
-
-
 // READ CLOUDCOVER.txt format
-vector<Info> readElse(ifstream &inFile, const string &content_type) // content_type = "cloudcover" or "pressure"
+Info *readElse(ifstream &inFile, const string &content_type, int &count) // content_type = "cloudcover" or "pressure"
 {
     string line, coordinate, number;
-    vector<Info> infos;
+    int capacity = 100;
+    Info *infos = new Info[capacity];
 
     while (getline(inFile, line))
     {
@@ -190,7 +169,8 @@ vector<Info> readElse(ifstream &inFile, const string &content_type) // content_t
         temp.coord_y_int = get<1>(coord_temp);
         temp.name = content_type;
 
-        infos.push_back(temp);
+        if (count < capacity)
+            infos[count++] = temp;
     }
 
     return infos;
@@ -242,7 +222,7 @@ string *ConfigFileReader(const string &inputFilename)
 }
 
 void displayMainMenu()
-{ 
+{
     // Appendix F Main menu
     const string studentId = "8761838";
     const string studentName = "Juwon Lee";
@@ -271,97 +251,75 @@ void displayMainMenu()
     cout << left << setw(30) << "Please enter your choice : ";
 }
 
-
 // vector<Coord> findSurroundings(City &city)
 // {
 //     vector<Coord> temp_coords;
 // };
 
-// generate correct surrounding area data with no overlap and return as vector<Coord> type
-vector<Coord> generateSurroundingCoord(City &city, int &min_x, int &max_x, int &min_y, int &max_y)
+// generate correct surrounding area data with no overlap and return as array
+Coord *generateSurroundingCoord(City &city, int &min_x, int &max_x, int &min_y, int &max_y, int &surroundingCount)
 {
-    int count = 0; // Delete later
-    vector<Coord> coords;
+    int capacity = 100;
+    Coord *coords = new Coord[capacity];
 
-    // add possible surrounding data
-    for (int j = 0; j < city.locations.size(); ++j)
+    for (int j = 0; j < city.locationCount; ++j)
     {
-        for (int i = -1; i < 2; ++i) // represents x-axis traversing
+        for (int i = -1; i <= 1; ++i)
         {
-            for (int k = -1; k < 2; ++k) // y-axis
+            for (int k = -1; k <= 1; ++k)
             {
-                int x_coord_temp = city.locations[j].x + i;
-                int y_coord_temp = city.locations[j].y + k;
-                if ((i == 0 && k == 0) ||
-                    x_coord_temp < min_x || x_coord_temp > max_x || // check if generated surrounding is within the grid X, Y range
-                    y_coord_temp < min_y || y_coord_temp > max_y)
-                {
-                    continue; // skip this loop, skip the orignial and out-of-grid coordinates
-                }
-                Coord temp;
-                temp.x = x_coord_temp;
-                temp.y = y_coord_temp;
+                int x = city.locations[j].x + i;
+                int y = city.locations[j].y + k;
+                if ((i == 0 && k == 0) || x < min_x || x > max_x || y < min_y || y > max_y)
+                    continue;
 
-                // check overlap here using temp
-                bool isOverlap = false;
-                for (const Coord tempCoord : coords)
+                bool isOverlapped = false;
+
+                // traverse through city.surroundings to see if there's pre-existing data
+                for (int m = 0; m < surroundingCount; ++m)
                 {
-                    if ((x_coord_temp == tempCoord.x) && (y_coord_temp == tempCoord.y)) // when the coordinate already added to vector<Coord>
+                    if (coords[m].x == x && coords[m].y == y)
                     {
-                        // cout << "Duplicate Found" << " Continuing" << endl; // break
-                        isOverlap = true;
+                        isOverlapped = true;
                         break;
                     }
                 }
 
-                if (isOverlap)
+                bool isCityLocation = false;
+                for (int c = 0; c < city.locationCount; ++c)
                 {
-                    isOverlap = true;
-                    continue; // skip this loop, skip the original and out-of-grid coordinates
+                    if (city.locations[c].x == x && city.locations[c].y == y)
+                    {
+                        isCityLocation = true;
+                        break;
+                    }
                 }
 
-                // cout << "possible_surr. "
-                //      << "x: " << temp.x << " "
-                //      << "y: " << temp.y << endl;
-                ++count;
-                coords.push_back(temp);
+                if (!isOverlapped && !isCityLocation)
+                {
+                    coords[surroundingCount++] = {x, y};
+                }
             }
         }
     }
-    // cout << "surrounding count for " << city.name << " : " << count << endl; // for testing
-
-    // check if citylocation itself is included
-    bool isOverlapOtherCityLoc = false; // use to check if city location itself is included in coords
-
-    // traverse through coords and city parameter to check if city location is added on coords
-    coords.erase(remove_if(coords.begin(), coords.end(),
-                           [&](const Coord &coord)
-                           {
-                               for (const Coord &cityLoc : city.locations)
-                               {
-                                   if (coord.x == cityLoc.x && coord.y == cityLoc.y)
-                                       return true;
-                               }
-                               return false;
-                           }),
-                 coords.end());
 
     return coords;
-};
+}
 
-vector<City> readCities(vector<Info> &cityLocInfos, int &min_x, int &max_x, int &min_y, int &max_y)
+City *readCities(Info *&cityLocInfos, int &min_x, int &max_x, int &min_y, int &max_y, int &cityLocInfosCount, int &cityCount)
 {
-    vector<City> cities;
+    int capacity = 100;
+    City *cities = new City[capacity];
 
     // location traverse
-    for (const Info &info : cityLocInfos)
+    for (int i = 0; i < cityLocInfosCount; ++i)
     {
+        Info info = cityLocInfos[i];
         string coord = info.coord;
         int coord_x_int = info.coord_x_int; // use this
         int coord_y_int = info.coord_y_int; // use this
         string number = info.number;
         string name = info.name;
-
         Coord tempCoord;
 
         // 1. Create City struct and save all extracted city location within the grid
@@ -369,14 +327,15 @@ vector<City> readCities(vector<Info> &cityLocInfos, int &min_x, int &max_x, int 
         {
             bool found = false;
             // if name is not in cities
-            for (City &city : cities)
+            for (int j = 0; j < cityCount; ++j)
             {
+                City &city = cities[j];
                 if (city.name == name) // if city name exists print the coordinate
                 {
                     // Found, add the city data to city
                     tempCoord.x = coord_x_int;
                     tempCoord.y = coord_y_int;
-                    city.locations.push_back(tempCoord);
+                    city.locations[city.locationCount++] = tempCoord;
                     found = true;
                     // for testing
                     // cout << "Found: "
@@ -385,18 +344,23 @@ vector<City> readCities(vector<Info> &cityLocInfos, int &min_x, int &max_x, int 
                     break;
                 }
             }
-            if (!found) // create new city struct and pushback to cities
+            if (!found && cityCount < capacity) // create new city struct and pushback to cities
             {
                 City tempCity;
                 tempCity.name = name;
+                tempCity.id = number;
                 tempCoord.x = coord_x_int;
                 tempCoord.y = coord_y_int;
-                tempCity.locations.push_back(tempCoord);
-                cities.push_back(tempCity);
+                tempCity.locations[tempCity.locationCount++] = tempCoord; // add tempCoord to tempCity.locations arrray
+                // And ++ tempCity.locationCount
+                // error prevention if the data saved more than required
+                cities[cityCount] = tempCity;
+                cityCount++;
                 // for testing
-                // cout << "Not Found: "
-                //      << tempCity.locations[0].x << ", "
-                //      << tempCity.locations[0].y << endl;
+                int lastIndex = tempCity.locationCount - 1;
+                cout << "Not Found: "
+                     << tempCity.locations[lastIndex].x << ", "
+                     << tempCity.locations[lastIndex].y << endl;
             }
             found = false;
         }
@@ -405,17 +369,23 @@ vector<City> readCities(vector<Info> &cityLocInfos, int &min_x, int &max_x, int 
     return cities;
 }
 
-vector<City> processSurroundings(vector<City> &cities, int &min_x, int &max_x, int &min_y, int &max_y)
+City *processSurroundings(City *&cities, int &cityCount, int &min_x, int &max_x, int &min_y, int &max_y, int &surroundingCount)
 {
-    for (City &city : cities)
+    for (int i = 0; i < cityCount; ++i)
     {
+        City city = cities[i];
         // generate surrounding data with no overlap with other locations of the same city
-        vector<Coord> surrounding_data = generateSurroundingCoord(city, min_x, max_x, min_y, max_y);
+        Coord *surrounding_data = generateSurroundingCoord(city, min_x, max_x, min_y, max_y, surroundingCount);
         // pushback to cities vector<City>
-        city.surroundings = surrounding_data;
+        for (int j = 0; j < surroundingCount; ++j)
+        {
+            city.surroundings[j] = surrounding_data[j];
+        }
         // check if it overlaps with other location data of the same city
         // different city, same surrounding data is possible
         // cout << "Surrounding_data just saved to " << city.name << ".surroundings!!!" << endl; // for testing
+
+        delete[] surrounding_data; // delete array
     }
 
     return cities;
@@ -425,74 +395,80 @@ vector<City> processSurroundings(vector<City> &cities, int &min_x, int &max_x, i
 // an ACC AP averaging functions when get cloudInfos, pressureInfos
 // type: "cloudcover", "pressure"
 // return: <float> type
-float getAverage(const City &city, const vector<Info> &infos, const string &type = "cloudcover")
+float getAverage(const City &city, const Info *infos, int infoCount, const string &type)
 {
+    int capacity = 100;
+    float *filteredData = new float[capacity];
+    int filteredCount = 0;
 
-    vector<float> filteredData;
-    vector<Coord> citylocs = city.locations;           // Coord type
-    vector<Coord> surroundinglocs = city.surroundings; // Coord type
-
-    // traverse through infos and find out either cloudcover or pressure info
-    for (const Info &info : infos)
+    for (int i = 0; i < infoCount; ++i)
     {
+        const Info &info = infos[i];
+        if (info.name != type)
+            continue;
+
         int info_x_val = info.coord_x_int;
         int info_y_val = info.coord_y_int;
-        bool isCorrect = info.name == type;
+
         bool isCityLoc = false;
+        for (int j = 0; j < city.locationCount; ++j)
+        {
+            if (city.locations[j].x == info_x_val && city.locations[j].y == info_y_val)
+            {
+                isCityLoc = true;
+                break;
+            }
+        }
+
         bool isSurrounding = false;
-
-        // traverse through citylocation
-        for (const Coord &cityloc : citylocs)
+        for (int j = 0; j < city.surroundingCount; ++j)
         {
-            // if info_x_val and info_y_val same as info coordinate in surrounding or citylocation
-            if (isCorrect && (info_x_val == cityloc.x) && (info.coord_y_int == cityloc.y))
+            if (city.surroundings[j].x == info_x_val && city.surroundings[j].y == info_y_val)
             {
-                isCityLoc = true; // city location found
+                isSurrounding = true;
+                break;
             }
         }
 
-        // traverse through surrounding location
-        for (const Coord &surrounding : surroundinglocs)
-        {
-            // if info_x_val and info_y_val same as info coordinate in surrounding or citylocation
-            if (isCorrect && (info_x_val == surrounding.x) && (info.coord_y_int == surrounding.y))
-            {
-                isSurrounding = true; // surrounding location found
-            }
-        }
         if (isCityLoc || isSurrounding)
         {
-            float measuredData = stof(info.number); // info.number string type to float
-            filteredData.push_back(measuredData);   // add to filteredData
+            float measuredData = stof(info.number);
+            if (filteredCount < capacity)
+            {
+                filteredData[filteredCount++] = measuredData;
+            }
         }
     }
 
-    // calculate average of data in filteredData
-    float averageData;
-    if (!filteredData.empty())
+    float averageData = 0.0f;
+    if (filteredCount > 0)
     {
-        float sum = std::accumulate(filteredData.begin(), filteredData.end(), 0.0f);
-        averageData = sum / filteredData.size();
-        // cout << "Average: " << averageData << endl; // for testing 
+        float sum = 0.0f;
+        for (int i = 0; i < filteredCount; ++i)
+        {
+            sum += filteredData[i];
+        }
+        averageData = sum / filteredCount;
     }
     else
     {
         cout << type << " data vector in getAverage is empty!" << endl;
-        return 0.00;
     }
 
+    delete[] filteredData;
     return averageData;
 }
 
 // process ACC and AP, then updata cities vector<City>
 // param: cities, cloudInfos, pressureInfos
-vector<City> processACCAP(vector<City> &cities, vector<Info> cloudCoverInfos, vector<Info> pressureInfos)
+City *processACCAP(City *&cities, int &cityCount, Info *cloudCoverInfos, int &cloudInfosCount, Info *&pressureInfos, int &pressureInfosCount)
 {
-    for (City &city : cities)
+    for (int i = 0; i < cityCount; ++i)
     {
         // get ACC and AP
-        float ACC = getAverage(city, cloudCoverInfos, "cloudcover");
-        float AP = getAverage(city, pressureInfos, "pressure");
+        City city = cities[i];
+        float ACC = getAverage(cities[i], cloudCoverInfos, cloudInfosCount, "cloudcover");
+        float AP = getAverage(cities[i], pressureInfos, pressureInfosCount, "pressure");
         city.ACC = ACC;
         city.AP = AP;
     }
@@ -500,24 +476,24 @@ vector<City> processACCAP(vector<City> &cities, vector<Info> cloudCoverInfos, ve
     return cities;
 }
 
-
 // for cities dataset testing purpose
-void printCities(vector<City> cities)
+void printCities(City *cities, int &cityCount)
 {
-    for (const City &city : cities)
+    for (int i = 0; i < cityCount; ++i)
     {
+        City city = cities[i];
         cout << fixed << setprecision(2);
         cout << city.name << endl;
         cout << "Locations: ";
-        for (int i = 0; i < city.locations.size(); ++i)
+        for (int i = 0; i < city.locationCount; ++i)
         {
             cout << "(" << city.locations[i].x << " , " << city.locations[i].y << ")" << " ";
         }
 
         cout << "Surroundings: ";
-        for (int i = 0; i < city.surroundings.size(); ++i)
+        for (int j = 0; j < city.surroundingCount; ++j)
         {
-            cout << "(" << city.surroundings[i].x << " , " << city.surroundings[i].y << ")" << " ";
+            cout << "(" << city.surroundings[j].x << " , " << city.surroundings[j].y << ")" << " ";
         }
 
         cout << "ACC: ";
@@ -556,17 +532,15 @@ int getRainProbability(string acc, string ap)
     return -1; // Invalid input
 }
 
-
-
 // print the final summary report after finishing city reading
-void printSummaryReport(const vector<City> &cities)
+void printSummaryReport(City *&cities, int &cityCount)
 {
     std::string asciiArray[9] = {
         "~~~~\n~~~~~\n\\\\\\\\\\", // Row 1
-        "~~~~\n~~~~~\n \\\\\\\\", // Row 2
-        "~~~~\n~~~~~\n   \\\\\\", // Row 3
-        "~~~~\n~~~~~\n    \\\\", // Row 4
-        "~~~~\n~~~~~\n    \\", // Row 5
+        "~~~~\n~~~~~\n \\\\\\\\",  // Row 2
+        "~~~~\n~~~~~\n   \\\\\\",  // Row 3
+        "~~~~\n~~~~~\n    \\\\",   // Row 4
+        "~~~~\n~~~~~\n    \\",     // Row 5
         "~~~~\n~~~~~\n\n",         // Row 6
         "~~~\n~~~~\n\n",           // Row 7
         "~~\n~~~\n\n",             // Row 8
@@ -579,15 +553,16 @@ void printSummaryReport(const vector<City> &cities)
     }
     cout << endl;
     // traverse through infos and cities and print all the summary
-    for (const City &city : cities)
+    for (int i = 0; i < cityCount; ++i)
     {
         // L,M,H 조건식만들고 probability도 조건식과 그에 맞는 ASCII 코드 매칭
+        City city = cities[i];
         float ACC_DATA = city.ACC;
         float AP_DATA = city.AP;
         float rainProbability;
         string ACC_LMH;
         string AP_LMH;
-        int asciiIndex; 
+        int asciiIndex;
 
         // set Average Cloud Cover L, M, H notation
         if (ACC_DATA >= 0 && ACC_DATA < 35)
