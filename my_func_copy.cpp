@@ -309,12 +309,14 @@ Coord *generateSurroundingCoord(City &city, int &min_x, int &max_x, int &min_y, 
 City *readCities(Info *&cityLocInfos, int &min_x, int &max_x, int &min_y, int &max_y, int &cityLocInfosCount, int &cityCount)
 {
     int capacity = 100;
-    City *cities = new City[capacity];
+    City *cities = new City[capacity]; // cities array defined
 
     // location traverse
     for (int i = 0; i < cityLocInfosCount; ++i)
     {
+        // save i th element of cityLocInfos
         Info info = cityLocInfos[i];
+
         string coord = info.coord;
         int coord_x_int = info.coord_x_int; // use this
         int coord_y_int = info.coord_y_int; // use this
@@ -326,7 +328,7 @@ City *readCities(Info *&cityLocInfos, int &min_x, int &max_x, int &min_y, int &m
         if (coord_x_int >= min_x && coord_x_int <= max_x && coord_y_int >= min_y && coord_y_int <= max_y)
         {
             bool found = false;
-            // if name is not in cities
+            // check if same city name is found in
             for (int j = 0; j < cityCount; ++j)
             {
                 City &city = cities[j];
@@ -335,7 +337,14 @@ City *readCities(Info *&cityLocInfos, int &min_x, int &max_x, int &min_y, int &m
                     // Found, add the city data to city
                     tempCoord.x = coord_x_int;
                     tempCoord.y = coord_y_int;
-                    city.locations[city.locationCount++] = tempCoord;
+                    if (city.locationCount < capacity)
+                    {
+                        city.locations[city.locationCount++] = tempCoord;
+                    }
+                    else
+                    {
+                        cerr << "[ERROR] Too many locations for city: " << city.name << endl;
+                    }
                     found = true;
                     // for testing
                     // cout << "Found: "
@@ -346,23 +355,36 @@ City *readCities(Info *&cityLocInfos, int &min_x, int &max_x, int &min_y, int &m
             }
             if (!found && cityCount < capacity) // create new city struct and pushback to cities
             {
+                // save newCity as tempCity and append into cities array
                 City tempCity;
                 tempCity.name = name;
                 tempCity.id = number;
                 tempCoord.x = coord_x_int;
                 tempCoord.y = coord_y_int;
-                tempCity.locations[tempCity.locationCount++] = tempCoord; // add tempCoord to tempCity.locations arrray
-                // And ++ tempCity.locationCount
+                tempCity.locationCount = 0; // initialize all in new tempCity <City> struct
+                tempCity.surroundingCount = 0;
+                tempCity.ACC = 0;
+                tempCity.AP = 0;
+                
                 // error prevention if the data saved more than required
+                if (tempCity.locationCount < 100)
+                {
+                    // And ++ tempCity.locationCount
+                    tempCity.locations[tempCity.locationCount++] = tempCoord; // add tempCoord to tempCity.locations array
+                }
+                else
+                {
+                    cerr << "[ERROR] Too many locations for city: " << tempCity.name << endl;
+                }
+
                 cities[cityCount] = tempCity;
                 cityCount++;
                 // for testing
-                int lastIndex = tempCity.locationCount - 1;
-                cout << "Not Found: "
-                     << tempCity.locations[lastIndex].x << ", "
-                     << tempCity.locations[lastIndex].y << endl;
+                // int lastIndex = tempCity.locationCount - 1;
+                // cout << "Not Found: "
+                //      << tempCity.locations[lastIndex].x << ", "
+                //      << tempCity.locations[lastIndex].y << endl;
             }
-            found = false;
         }
     }
 
@@ -371,16 +393,32 @@ City *readCities(Info *&cityLocInfos, int &min_x, int &max_x, int &min_y, int &m
 
 City *processSurroundings(City *&cities, int &cityCount, int &min_x, int &max_x, int &min_y, int &max_y, int &surroundingCount)
 {
+    City* newCities = new City[100];
+
+    // assign newCities with cities data
     for (int i = 0; i < cityCount; ++i)
     {
-        City city = cities[i];
+        newCities[i] = cities[i];
+    }
+
+    // generateSurroundingCoords to newCities
+    for (int i = 0; i < cityCount; ++i)
+    {
         // generate surrounding data with no overlap with other locations of the same city
-        Coord *surrounding_data = generateSurroundingCoord(city, min_x, max_x, min_y, max_y, surroundingCount);
+        // need to de-reference newCities since it's a pointer
+        Coord *surrounding_data = generateSurroundingCoord(newCities[i], min_x, max_x, min_y, max_y, surroundingCount);
         // pushback to cities vector<City>
         for (int j = 0; j < surroundingCount; ++j)
         {
-            city.surroundings[j] = surrounding_data[j];
+            newCities[i].surroundings[j] = surrounding_data[j];
         }
+
+        // save local surrounding count to City struct
+        newCities[i].surroundingCount = surroundingCount;
+
+        // initialize global surroundingCount
+        surroundingCount = 0;
+
         // check if it overlaps with other location data of the same city
         // different city, same surrounding data is possible
         // cout << "Surrounding_data just saved to " << city.name << ".surroundings!!!" << endl; // for testing
@@ -388,7 +426,7 @@ City *processSurroundings(City *&cities, int &cityCount, int &min_x, int &max_x,
         delete[] surrounding_data; // delete array
     }
 
-    return cities;
+    return newCities;
 }
 
 // get the city structure and infos either pressure or cloudcover and return the Average data
@@ -466,7 +504,7 @@ City *processACCAP(City *&cities, int &cityCount, Info *cloudCoverInfos, int &cl
     for (int i = 0; i < cityCount; ++i)
     {
         // get ACC and AP
-        City city = cities[i];
+        City &city = cities[i];
         float ACC = getAverage(cities[i], cloudCoverInfos, cloudInfosCount, "cloudcover");
         float AP = getAverage(cities[i], pressureInfos, pressureInfosCount, "pressure");
         city.ACC = ACC;

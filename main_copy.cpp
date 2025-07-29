@@ -69,6 +69,13 @@ int main()
             cin >> file;
             cin.ignore();
 
+            // initialize important global indexing variables
+            cityCount = 0;
+            surroundingCount = 0;
+            cityInfosCount = 0;
+            cloudInfosCount = 0;
+            pressureInfosCount = 0;
+
             // string *txtFileReader(const string &inputFilename)
             //  txt file reader
             if (fileData != nullptr)
@@ -191,17 +198,14 @@ int main()
             // vector<Info> cityInfos;
             // vector<Info> cloudInfos;
             // vector<Info> pressureInfos;
-            cout << "Before readCities" << endl;
+
+            // test citylocation
             // 2. identify valid citylocation within range of x and y and save it in vector<City>
             City *cities = readCities(cityInfos, x_idx_result[0], x_idx_result[1], y_idx_result[0], y_idx_result[1], cityInfosCount, cityCount);
-            cout << "Before filteredCities" << endl;
             // 3. Generate surrounding areas of city location and make sure it not overlaps and pushback to cities vector<City>
             City *filteredCities = processSurroundings(cities, cityCount, x_idx_result[0], x_idx_result[1], y_idx_result[0], y_idx_result[1], surroundingCount);
-            cout << "=== Before summary ===" << endl;
-            cout << "cityCount: " << cityCount << endl;
-            cout << "first city name: " << filteredCities[0].name << endl;
+            // cout << "cityCount: " << cityCount << endl; // for testing
 
-            cout << "Before processACCAP" << endl;
             // 4. calculate Average Cloud Cover and Average Pressure and save it into cities
             processACCAP(filteredCities, cityCount, cloudInfos, cloudInfosCount, pressureInfos, pressureInfosCount);
 
@@ -211,6 +215,7 @@ int main()
             if (filteredCities != nullptr && cityCount > 0)
             {
                 printSummaryReport(filteredCities, cityCount);
+                printCities(filteredCities, cityCount);
             }
             else
             {
