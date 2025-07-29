@@ -1,11 +1,7 @@
 #include "my_func.h"
 #include <iostream>
-#include <iomanip>
-#include <vector>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <array>
+#include <numeric> // for std::accumulate
+#include <sstream> // stringstream
 
 using namespace std;
 
@@ -347,29 +343,6 @@ void displayMainMenu()
 }
 
 
-
-struct Coord
-{
-    int x;
-    int y;
-
-    // set/map arrange condition
-    bool operator<(const Coord &other) const
-    {
-        return tie(x, y) < tie(other.x, other.y);
-    }
-};
-
-struct City
-{
-    string name;
-    string id;
-    vector<Coord> locations; // city area of this city
-    vector<Coord> surroundings;
-    float ACC; // Average Cloud Cover
-    float AP;  // Average Pressure
-};
-
 // vector<Coord> findSurroundings(City &city)
 // {
 //     vector<Coord> temp_coords;
@@ -426,7 +399,7 @@ vector<Coord> generateSurroundingCoord(City &city, int &min_x, int &max_x, int &
             }
         }
     }
-    cout << "surrounding count for " << city.name << " : " << count << endl;
+    // cout << "surrounding count for " << city.name << " : " << count << endl; // for testing
 
     // check if citylocation itself is included
     bool isOverlapOtherCityLoc = false; // use to check if city location itself is included in coords
@@ -476,9 +449,10 @@ vector<City> readCities(vector<Info> &cityLocInfos, int &min_x, int &max_x, int 
                     tempCoord.y = coord_y_int;
                     city.locations.push_back(tempCoord);
                     found = true;
-                    cout << "Found: "
-                         << city.locations[0].x << ", "
-                         << city.locations[0].y << endl;
+                    // for testing
+                    // cout << "Found: "
+                    //      << city.locations[0].x << ", "
+                    //      << city.locations[0].y << endl;
                     break;
                 }
             }
@@ -490,13 +464,13 @@ vector<City> readCities(vector<Info> &cityLocInfos, int &min_x, int &max_x, int 
                 tempCoord.y = coord_y_int;
                 tempCity.locations.push_back(tempCoord);
                 cities.push_back(tempCity);
-                cout << "Not Found: "
-                     << tempCity.locations[0].x << ", "
-                     << tempCity.locations[0].y << endl;
+                // for testing
+                // cout << "Not Found: "
+                //      << tempCity.locations[0].x << ", "
+                //      << tempCity.locations[0].y << endl;
             }
             found = false;
         }
-        cout << endl;
     }
 
     return cities;
@@ -512,7 +486,7 @@ vector<City> processSurroundings(vector<City> &cities, int &min_x, int &max_x, i
         city.surroundings = surrounding_data;
         // check if it overlaps with other location data of the same city
         // different city, same surrounding data is possible
-        cout << "Surrounding_data just saved to " << city.name << ".surroundings!!!" << endl;
+        // cout << "Surrounding_data just saved to " << city.name << ".surroundings!!!" << endl; // for testing
     }
 
     return cities;
@@ -570,7 +544,7 @@ float getAverage(const City &city, const vector<Info> &infos, const string &type
     {
         float sum = std::accumulate(filteredData.begin(), filteredData.end(), 0.0f);
         averageData = sum / filteredData.size();
-        cout << "Average: " << averageData << endl;
+        // cout << "Average: " << averageData << endl; // for testing 
     }
     else
     {
@@ -653,61 +627,6 @@ int getRainProbability(string acc, string ap)
     return -1; // Invalid input
 }
 
-// printAsciiValue based on rainProbability line matched
-void printAsciiVisual(int rainProbability) {
-    using std::cout;
-    using std::endl;
-    using std::setw;
-
-    if (rainProbability == 90) {
-        cout << setw(5) << right << "~~~~" << endl;
-        cout << setw(5) << right << "~~~~~" << endl;
-        cout << setw(5) << right << "\\\\\\\\\\" << endl;    
-    }
-    else if (rainProbability == 80) {
-        cout << setw(5) << right << "~~~~" << endl;
-        cout << setw(5) << right << "~~~~~" << endl;
-        cout << setw(9) << right << "\\\\\\\\" << endl;
-    }
-    else if (rainProbability == 70) {
-        cout << setw(5) << right << "~~~~" << endl;
-        cout << setw(5) << right << "~~~~~" << endl;
-        cout << setw(11) << right << "\\\\\\" << endl;
-    }
-    else if (rainProbability == 60) {
-        cout << setw(5) << right << "~~~~" << endl;
-        cout << setw(5) << right << "~~~~~" << endl;
-        cout << setw(13) << right << "\\\\" << endl;
-    }
-    else if (rainProbability == 50) {
-        cout << setw(5) << right << "~~~~" << endl;
-        cout << setw(5) << right << "~~~~~" << endl;
-        cout << setw(15) << right << "\\" << endl;    
-    }
-    else if (rainProbability == 40) {
-        cout << setw(5) << right << "~~~~" << endl;
-        cout << setw(5) << right << "~~~~~" << endl;
-        cout << endl;
-    }
-    else if (rainProbability == 30) {
-        cout << setw(5) << right << "~~~" << endl;
-        cout << setw(5) << right << "~~~~" << endl;
-        cout << endl;
-    }
-    else if (rainProbability == 20) {
-        cout << setw(5) << right << "~~" << endl;
-        cout << setw(5) << right << "~~~" << endl;
-        cout << endl;
-    }
-    else if (rainProbability == 10) {
-        cout << setw(5) << right << "~" << endl;
-        cout << setw(5) << right << "~~" << endl;
-        cout << endl;
-    }
-    else {
-        cout << "(Invalid rainProbability)" << endl;
-    }
-}
 
 
 // print the final summary report after finishing city reading
@@ -775,7 +694,7 @@ void printSummaryReport(const vector<City> &cities)
         rainProbability = getRainProbability(ACC_LMH, AP_LMH);
 
         asciiIndex = (int)(90 - rainProbability) / 10;
-        cout << "asciiIndex: " << asciiIndex << endl;
+        // cout << "asciiIndex: " << asciiIndex << endl; // for testing
 
         // 바로 asciiArray에서 조회할 수 있게 index에 맞게 맵핑하기
         cout << endl;
