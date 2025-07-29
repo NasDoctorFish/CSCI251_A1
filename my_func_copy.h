@@ -33,7 +33,7 @@ struct Coord
     // set/map arrange condition
     bool operator<(const Coord &other) const
     {
-        return tie(x, y) < tie(other.x, other.y);
+        return std::tie(x, y) < std::tie(other.x, other.y);
     }
 };
 
